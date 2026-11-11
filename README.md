@@ -32,9 +32,17 @@ npm run dev
 | `ASTRO_API_USER_ID` / `ASTRO_API_KEY` | Basic認証。USER_ID未設定時は `Bearer ASTRO_API_KEY` |
 | `ANTHROPIC_API_KEY` | Claude API キー |
 | `ANTHROPIC_MODEL` | 既定 `claude-sonnet-5-5` |
+| `APP_USER` / `APP_PASSWORD` | **必須**。サイト全体のBasic認証。未設定だと本番は503で停止 |
+| `RATE_LIMIT_PER_HOUR` | IPごとのAPI呼び出し上限（既定20） |
 
 別の占星術APIを使う場合は `lib/astroApi.ts` の `callWesternHoroscope` / `normalizePlanets` を差し替えてください。
 
 ## 時間不明時の挙動
 - 12:00 でAPIへリクエストし、アセンダント・ハウスを描画／解説から除外
 - 同日の 0:00 と 23:59 も取得し、月星座が変わる日は両方の候補を補足表示＆レポートでも両方解説
+
+## 不正利用対策
+- サイト全体をパスワード保護（`middleware.ts`）。パスワードを知らない人は外部APIを呼べません
+- `APP_PASSWORD` 未設定の本番環境は自動で公開停止（設定漏れで無防備にならない）
+- IPごとの回数制限（補助）
+- 念のため Anthropic コンソールの Spend limit と占星術APIの利用上限も設定してください
