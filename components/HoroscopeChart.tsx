@@ -72,7 +72,7 @@ export default function HoroscopeChart({ chart }: { chart: ChartData }) {
   const planetLon = Object.fromEntries(chart.planets.map((p) => [p.key, p.longitude]));
 
   return (
-    <div ref={wrapRef} className="relative mx-auto w-full max-w-[600px] select-none" onClick={() => setTip(null)}>
+    <div ref={wrapRef} className="print-chart relative mx-auto w-full max-w-[600px] select-none" onClick={() => setTip(null)}>
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-auto w-full" role="img" aria-label="ホロスコープチャート">
         <circle cx={C} cy={C} r={R_OUTER} fill="#fff" stroke="#334155" strokeWidth={2} />
 
@@ -176,7 +176,7 @@ export default function HoroscopeChart({ chart }: { chart: ChartData }) {
 
       {tip && (
         <div
-          className="pointer-events-none absolute z-10 w-64 rounded-lg border border-slate-200 bg-white/95 p-3 text-sm text-slate-800 shadow-lg"
+          className="no-print pointer-events-none absolute z-10 w-64 rounded-lg border border-slate-200 bg-white/95 p-3 text-sm text-slate-800 shadow-lg"
           style={{
             left: Math.min(Math.max(tip.x - 128, 0), (wrapRef.current?.clientWidth ?? 600) - 256),
             top: tip.y + 16,

@@ -25,7 +25,16 @@ export default function ChartSummary({ chart }: { chart: ChartData }) {
         </div>
       )}
 
-      <table className="w-full overflow-hidden rounded-lg bg-white text-sm shadow">
+      <div className="flex flex-wrap gap-3 text-xs">
+        {ASPECT_ORDER.map((k) => (
+          <span key={k} className="flex items-center gap-1">
+            <svg width="24" height="6"><line x1="0" y1="3" x2="24" y2="3" stroke={ASPECTS[k].color} strokeWidth="2" strokeDasharray={ASPECTS[k].dash} /></svg>
+            {ASPECTS[k].name}
+          </span>
+        ))}
+      </div>
+
+      <table className="avoid-break w-full overflow-hidden rounded-lg bg-white text-sm shadow">
         <thead className="bg-slate-100">
           <tr><th className="p-2 text-left">天体</th><th className="p-2 text-left">星座</th><th className="p-2 text-left">役割</th></tr>
         </thead>
@@ -52,14 +61,6 @@ export default function ChartSummary({ chart }: { chart: ChartData }) {
         </tbody>
       </table>
 
-      <div className="flex flex-wrap gap-3 text-xs">
-        {ASPECT_ORDER.map((k) => (
-          <span key={k} className="flex items-center gap-1">
-            <svg width="24" height="6"><line x1="0" y1="3" x2="24" y2="3" stroke={ASPECTS[k].color} strokeWidth="2" strokeDasharray={ASPECTS[k].dash} /></svg>
-            {ASPECTS[k].name}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
