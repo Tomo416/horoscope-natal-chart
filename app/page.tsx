@@ -5,33 +5,25 @@ import BirthForm from "@/components/BirthForm";
 import HoroscopeChart from "@/components/HoroscopeChart";
 import ChartSummary from "@/components/ChartSummary";
 import Report from "@/components/Report";
+import { buildReport } from "@/lib/report";
 import type { BirthInput, ChartData } from "@/lib/types";
 
 export default function Home() {
   const [chart, setChart] = useState<ChartData | null>(null);
-  const [report, setReport] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (input: BirthInput) => {
-    setLoading(true); setError(""); setChart(null); setReport("");
+    setLoading(true); setError(""); setChart(null);
     try {
       const res = await fetch("/api/chart", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setChart(data);
-      setLoading(false);
-
-      setReportLoading(true);
-      const r = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-      const rd = await r.json();
-      if (!r.ok) throw new Error(rd.error);
-      setReport(rd.report);
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setLoading(false); setReportLoading(false);
+      setLoading(false);
     }
   };
 
@@ -55,10 +47,10 @@ export default function Home() {
         </section>
       )}
 
-      {(reportLoading || report) && (
+      {chart && (
         <section className="rounded-2xl bg-white p-6 shadow">
           <h2 className="text-xl font-bold">✨ あなたへの鑑定レポート</h2>
-          {reportLoading ? <p className="mt-4 animate-pulse text-slate-500">鑑定レポートを作成中です…</p> : <Report text={report} />}
+          <Report sections={buildReport(chart)} />
         </section>
       )}
     </main>
