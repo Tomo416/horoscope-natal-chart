@@ -20,6 +20,8 @@ export default function Home() {
     setTimeout(() => {
       try {
         setChart(calculateChart(input));
+        // 結果へ自動スクロール（連続して鑑定するときの手間を減らす）
+        setTimeout(() => document.getElementById("result")?.scrollIntoView({ behavior: "smooth" }), 50);
       } catch (e) {
         setError("計算中にエラーが発生しました: " + (e as Error).message);
       } finally {
@@ -40,7 +42,7 @@ export default function Home() {
       {error && <div className="no-print rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</div>}
 
       {chart && (
-        <div className="no-print flex justify-end">
+        <div id="result" className="no-print flex justify-end">
           <button type="button" onClick={() => window.print()}
             className="rounded-lg border border-indigo-600 px-5 py-2 font-bold text-indigo-700 hover:bg-indigo-50">
             🖨 印刷する

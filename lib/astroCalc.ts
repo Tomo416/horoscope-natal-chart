@@ -1,5 +1,6 @@
 import * as A from "astronomy-engine";
 import { findAspects } from "./aspects";
+import { isJapanDst } from "./japanDst";
 import type { BirthInput, ChartData, PlanetKey, PlanetPosition } from "./types";
 
 /**
@@ -85,10 +86,11 @@ function houseOf(lon: number, cusps: number[]) {
   return 12;
 }
 
-/** 現地時刻（tzone時間）→ UTC Date */
+/** 現地時刻 → UTC Date（日本時間の場合は1948〜1951年のサマータイムを自動補正） */
 function toUTC(dateStr: string, h: number, m: number, tzone: number) {
   const [y, mo, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, mo - 1, d, h, m) - tzone * 3600_000);
+  const offset = tzone === 9 && isJapanDst(dateStr, h, m) ? 10 : tzone;
+  return new Date(Date.UTC(y, mo - 1, d, h, m) - offset * 3600_000);
 }
 
 const signIdx = (lon: number) => Math.floor(norm(lon) / 30);
@@ -99,6 +101,7 @@ export function calculateChart(input: BirthInput): ChartData {
   const date = toUTC(input.date, h, m, input.tzone);
   const planets = planetsAt(date);
   const chart: ChartData = { input, planets, aspects: findAspects(planets) };
+  if (input.tzone === 9 && !input.timeUnknown && isJapanDst(input.date, h, m)) chart.dstApplied = true;
 
   if (!input.timeUnknown) {
     const { asc, mc, cusps } = housesAt(date, input.lat, input.lon);

@@ -45,4 +45,6 @@ export interface ChartData {
   houses?: number[]; // 12ハウスのカスプ黄経
   aspects: Aspect[];
   moonBoundary?: MoonBoundary;
+  /** 日本のサマータイム（1948〜1951年）で1時間補正したか */
+  dstApplied?: boolean;
 }

@@ -13,6 +13,12 @@ export default function ChartSummary({ chart }: { chart: ChartData }) {
           「アセンダント（生まれた瞬間に東の地平線にあった星座＝第一印象）」と「12ハウス（人生の12の舞台）」は除外しています。
         </div>
       )}
+      {chart.dstApplied && (
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm">
+          この日時は日本でサマータイム（1948〜1951年の夏時刻）が実施されていた期間のため、
+          時計が1時間進んでいたものとして自動補正して計算しています。
+        </div>
+      )}
       {mb?.crosses && (
         <div className="rounded-lg border border-sky-300 bg-sky-50 p-4 text-sm">
           🌙 この日は1日のうちに月が <b>{SIGNS[mb.signAtStart].name}</b> から <b>{SIGNS[mb.signAtEnd].name}</b> へ移動しています。
