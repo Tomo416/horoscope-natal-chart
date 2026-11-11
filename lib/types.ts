@@ -12,6 +12,7 @@ export interface BirthInput {
   lon: number;
   tzone: number; // 例: 9（日本標準時）
   placeName: string;
+  name?: string; // 印刷用のお名前（任意）
 }
 
 export interface PlanetPosition {

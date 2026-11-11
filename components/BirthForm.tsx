@@ -5,6 +5,7 @@ import { PREFECTURES, TOKYO } from "@/data/prefectures";
 import type { BirthInput } from "@/lib/types";
 
 export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthInput) => void; loading: boolean }) {
+  const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("12:00");
   const [timeUnknown, setTimeUnknown] = useState(false);
@@ -16,6 +17,7 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
     // 時間不明時は東京をデフォルトに
     const pref = timeUnknown ? TOKYO : PREFECTURES.find((p) => p.code === prefCode) ?? TOKYO;
     onSubmit({
+      name: name.trim() || undefined,
       date,
       time: timeUnknown ? null : time,
       timeUnknown,
@@ -27,7 +29,13 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-2xl bg-white p-6 shadow">
+    <form onSubmit={submit} className="no-print space-y-4 rounded-2xl bg-white p-6 shadow">
+      <label className="block">
+        <span className="font-semibold">お名前（任意・印刷時に表示）</span>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：山田 花子"
+          className="mt-1 w-full rounded border border-slate-300 px-3 py-2" />
+      </label>
+
       <label className="block">
         <span className="font-semibold">生年月日 <span className="text-red-500">*</span></span>
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}

@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== 印刷用（A4縦） ===== */
+.print-only { display: none; }
+
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  html, body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact; /* 星座の色分けやアスペクト線の色を印刷する */
+    font-size: 10.5pt;
+  }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  main > * + * { margin-top: 4mm !important; }
+  .card { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+  .card > * + * { margin-top: 3mm !important; }
+  .print-chart { max-width: 105mm !important; }
+  table td, table th { padding: 1mm 2mm !important; }
+  .page-break { break-before: page; }
+  .avoid-break { break-inside: avoid; }
+  table { box-shadow: none !important; border: 1px solid #cbd5e1; }
+  h3 { break-after: avoid; }
+}
