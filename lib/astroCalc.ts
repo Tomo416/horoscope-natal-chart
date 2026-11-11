@@ -1,10 +1,9 @@
-import "server-only";
 import * as A from "astronomy-engine";
 import { findAspects } from "./aspects";
 import type { BirthInput, ChartData, PlanetKey, PlanetPosition } from "./types";
 
 /**
- * 天体計算（無料・オープンソースの astronomy-engine を使用。外部APIは呼ばない）
+ * 天体計算（無料・オープンソースの astronomy-engine を使用。ブラウザ内で計算し、外部通信なし）
  * 天文学の計算式で黄経を求めるため、AIによる推測は一切入らない。
  * ハウスはプラシーダス方式。
  */
