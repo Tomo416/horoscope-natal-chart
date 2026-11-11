@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { calculateChart } from "@/lib/astroApi";
+import { calculateChart } from "@/lib/astroCalc";
 import { TOKYO } from "@/data/prefectures";
 import type { BirthInput } from "@/lib/types";
 
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       tzone: Number.isFinite(body.tzone) ? body.tzone! : 9,
       placeName: body.placeName || `${TOKYO.name}（デフォルト）`,
     };
-    const chart = await calculateChart(input);
+    const chart = calculateChart(input);
     return NextResponse.json(chart);
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
