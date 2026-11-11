@@ -6,6 +6,7 @@ import HoroscopeChart from "@/components/HoroscopeChart";
 import ChartSummary from "@/components/ChartSummary";
 import Report from "@/components/Report";
 import { buildReport } from "@/lib/report";
+import { calculateChart } from "@/lib/astroCalc";
 import type { BirthInput, ChartData } from "@/lib/types";
 
 export default function Home() {
@@ -13,18 +14,18 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (input: BirthInput) => {
+  const handleSubmit = (input: BirthInput) => {
     setLoading(true); setError(""); setChart(null);
-    try {
-      const res = await fetch("/api/chart", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setChart(data);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    // 天体計算はブラウザ内で実行（サーバー・外部APIは不要）
+    setTimeout(() => {
+      try {
+        setChart(calculateChart(input));
+      } catch (e) {
+        setError("計算中にエラーが発生しました: " + (e as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }, 0);
   };
 
   return (
