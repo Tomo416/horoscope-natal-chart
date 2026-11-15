@@ -130,7 +130,7 @@ details summary{cursor:pointer;font-weight:700;margin-top:18px}
   <section class="detail" id="detail" style="margin-top:30px"></section>
 
   <details><summary>生まれた時の星（ネイタル）</summary><div class="natal" id="natal"></div></details>
-  <p class="note">出生時刻がない場合は正午で計算し、月の位置は使いません。12年周期は生まれた日の干支から星人を出し、年運・月運の12周期を当てています。九星気学は立春と節入りで年・月を区切り、本命星の入る宮と暗剣殺を見ています。占術ごとの点数は−2〜＋2で、重なりはその合計です。</p>
+  <p class="note">出生時刻がない場合は正午で計算し、月の位置は使いません。12年周期は生まれた日の干支から星人を出し、年運・月運の12周期を当てています。9年周期は立春と節入りで年・月を区切り、本命星の入る宮と暗剣殺を見ています。占術ごとの点数は−2〜＋2で、重なりはその合計です。</p>
  </div>
 </main>
 
@@ -394,7 +394,7 @@ R(c,a.tt,m.Jupiter,2.825345909524226E-7);b[m.Saturn]=R(c,a.tt,m.Saturn,8.4597151
 H.AddAcceleration(b.a,b.r,this.curr.gravitators[m.Uranus].r,1.292024916781969E-8),H.AddAcceleration(b.a,b.r,this.curr.gravitators[m.Neptune].r,1.524358900784276E-8)};H.AddAcceleration=function(a,b,c,d){var f=c.x-b.x,g=c.y-b.y;b=c.z-b.z;c=f*f+g*g+b*b;d/=c*Math.sqrt(c);a.x+=f*d;a.y+=g*d;a.z+=b*d};H.prototype.Duplicate=function(){var a={};for(b in this.curr.gravitators)a[b]=this.curr.gravitators[b].clone();var b=[];for(var c=$jscomp.makeIterator(this.curr.bodies),d=c.next();!d.done;d=c.next())b.push(d.value.clone());
 return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prototype,{OriginBody:{configurable:!0,enumerable:!0,get:function(){return this.originBody}},Time:{configurable:!0,enumerable:!0,get:function(){return this.curr.time}}});e.GravitySimulator=H;var kd=function(a,b,c){this.time=a;this.gravitators=b;this.bodies=c}},{}]},{},[1])(1)});
 </script>
-<script>/* 星読みエンジン：西洋占星術 × 12年周期 × 九星気学 */
+<script>/* 星読みエンジン：西洋占星術 × 12年周期 × 9年周期 */
 (function (root) {
   const A = root.Astronomy;
   const SIGNS = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
@@ -570,7 +570,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return CYCLE[(idx + 9) % 12];
   }
 
-  /* ---------- 九星気学 ---------- */
+  /* ---------- 9年周期 ---------- */
   const KYU = ['', '一白水星', '二黒土星', '三碧木星', '四緑木星', '五黄土星', '六白金星', '七赤金星', '八白土星', '九紫火星'];
   const PALACE = {
     1: { n: '坎宮（北）', s: -1.5, r: '冬の時期。表に出ず、内側を整える' },
@@ -724,7 +724,7 @@ function render() {
   const maxT = Math.max(3, ...ms.map(x => Math.abs(x.total)));
   let h = '<div class="rh"></div>';
   ms.forEach((x, i) => h += `<div class="mh ${i === SEL ? 'sel' : ''}" data-i="${i}" tabindex="0" role="button" aria-label="${x.y}年${x.m}月を見る">${x.m}月<small>${x.y}</small></div>`);
-  const rows = [['西洋占星術', x => x.west.score], ['12年周期', x => x.roku.score], ['九星気学', x => x.kyu.score]];
+  const rows = [['西洋占星術', x => x.west.score], ['12年周期', x => x.roku.score], ['9年周期', x => x.kyu.score]];
   for (const [name, f] of rows) {
     h += `<div class="rh">${name}</div>`;
     ms.forEach((x, i) => { const [c, s] = MARK(f(x)); h += `<div class="cell ${c} ${i === SEL ? 'sel' : ''}" data-i="${i}" title="${x.y}年${x.m}月 ${name}">${s}</div>`; });
@@ -768,7 +768,7 @@ function detail(x) {
     <article class="card"><h4>12年周期<em>${sc(r.score)}</em></h4><p class="k">${RES.rokusei.label}の12年周期</p>
      <p class="big">年運 ${r.year}　月運 ${r.month}</p>
      <ul>${li(['達成','緑生','立花','財成','安定','種子','再会'].includes(r.year) ? 1 : -1, `年運「${r.year}」`, r.yr)}${li(['達成','緑生','立花','財成','安定','種子','再会'].includes(r.month) ? 1 : -1, `月運「${r.month}」`, r.mr)}</ul></article>
-    <article class="card"><h4>九星気学<em>${sc(k.score)}</em></h4><p class="k">${RES.honmei.name}の入る宮</p>
+    <article class="card"><h4>9年周期<em>${sc(k.score)}</em></h4><p class="k">${RES.honmei.name}の入る宮</p>
      <p class="big">年 ${k.year.n}　月 ${k.month.n}</p>
      <ul>${li(k.year.s, `年盤（中宮 ${k.year.center}）：${k.year.n}`, k.year.r)}${li(k.month.s, `月盤（中宮 ${k.month.center}）：${k.month.n}`, k.month.r)}
      ${k.year.anken ? li(-1, '年の暗剣殺', '思わぬ方向から邪魔が入りやすい') : ''}${k.month.anken ? li(-1, 'この月は暗剣殺', '急な契約や大きな移動は慎重に') : ''}</ul></article>
@@ -777,7 +777,7 @@ function detail(x) {
 
 function profile() {
   const N = RES.natal, r = RES.rokusei;
-  $('prof').innerHTML = `<span class="chip">太陽<b>${N.Sun.sign}</b></span>${RES.hasTime ? `<span class="chip">月<b>${N.Moon.sign}</b></span>` : ''}<span class="chip">12年周期<b>${r.label}${r.reigou ? '・霊合星人' : ''}</b></span><span class="chip">九星<b>${RES.honmei.name}</b></span><span class="chip">日干支<b>${r.gz}</b></span>`;
+  $('prof').innerHTML = `<span class="chip">太陽<b>${N.Sun.sign}</b></span>${RES.hasTime ? `<span class="chip">月<b>${N.Moon.sign}</b></span>` : ''}<span class="chip">12年周期<b>${r.label}${r.reigou ? '・霊合星人' : ''}</b></span><span class="chip">本命星<b>${RES.honmei.name}</b></span><span class="chip">日干支<b>${r.gz}</b></span>`;
   $('natal').innerHTML = Object.values(N).filter(p => RES.hasTime || p.n !== '月').map(p => `<div><span>${p.g} ${p.n}</span><b>${p.sign} ${p.deg}°</b></div>`).join('');
 }
 
