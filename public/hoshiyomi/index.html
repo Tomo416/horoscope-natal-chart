@@ -394,7 +394,7 @@ R(c,a.tt,m.Jupiter,2.825345909524226E-7);b[m.Saturn]=R(c,a.tt,m.Saturn,8.4597151
 H.AddAcceleration(b.a,b.r,this.curr.gravitators[m.Uranus].r,1.292024916781969E-8),H.AddAcceleration(b.a,b.r,this.curr.gravitators[m.Neptune].r,1.524358900784276E-8)};H.AddAcceleration=function(a,b,c,d){var f=c.x-b.x,g=c.y-b.y;b=c.z-b.z;c=f*f+g*g+b*b;d/=c*Math.sqrt(c);a.x+=f*d;a.y+=g*d;a.z+=b*d};H.prototype.Duplicate=function(){var a={};for(b in this.curr.gravitators)a[b]=this.curr.gravitators[b].clone();var b=[];for(var c=$jscomp.makeIterator(this.curr.bodies),d=c.next();!d.done;d=c.next())b.push(d.value.clone());
 return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prototype,{OriginBody:{configurable:!0,enumerable:!0,get:function(){return this.originBody}},Time:{configurable:!0,enumerable:!0,get:function(){return this.curr.time}}});e.GravitySimulator=H;var kd=function(a,b,c){this.time=a;this.gravitators=b;this.bodies=c}},{}]},{},[1])(1)});
 </script>
-<script>/* 星読みエンジン：西洋占星術 × 12年周期 × 9年周期 */
+<script>/* 星読みエンジン：天体の動き × 12年周期 × 9年周期 */
 (function (root) {
   const A = root.Astronomy;
   const SIGNS = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
@@ -423,7 +423,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function signOf(l) { return SIGNS[Math.floor(norm(l) / 30)]; }
   function degIn(l) { return Math.floor(norm(l) % 30); }
 
-  /* ---------- 西洋占星術 ---------- */
+  /* ---------- 天体の動き ---------- */
   const ASPECTS = [
     { a: 0, n: '重なる', sym: '☌', kind: 'conj' },
     { a: 60, n: '支える', sym: '⚹', kind: 'soft' },
@@ -456,7 +456,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return positions(t);
   }
 
-  // 月ごとの西洋占星術スコア
+  // 月ごとの天体の動きスコア
   function westernMonth(nat, y, m, hasTime) {
     const targets = hasTime ? ['Moon', ...TARGETS_BASE] : TARGETS_BASE;
     const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
@@ -724,7 +724,7 @@ function render() {
   const maxT = Math.max(3, ...ms.map(x => Math.abs(x.total)));
   let h = '<div class="rh"></div>';
   ms.forEach((x, i) => h += `<div class="mh ${i === SEL ? 'sel' : ''}" data-i="${i}" tabindex="0" role="button" aria-label="${x.y}年${x.m}月を見る">${x.m}月<small>${x.y}</small></div>`);
-  const rows = [['西洋占星術', x => x.west.score], ['12年周期', x => x.roku.score], ['9年周期', x => x.kyu.score]];
+  const rows = [['天体の動き', x => x.west.score], ['12年周期', x => x.roku.score], ['9年周期', x => x.kyu.score]];
   for (const [name, f] of rows) {
     h += `<div class="rh">${name}</div>`;
     ms.forEach((x, i) => { const [c, s] = MARK(f(x)); h += `<div class="cell ${c} ${i === SEL ? 'sel' : ''}" data-i="${i}" title="${x.y}年${x.m}月 ${name}">${s}</div>`; });
@@ -763,7 +763,7 @@ function detail(x) {
    <h3>${x.y}年${x.m}月</h3><span class="verdict ${vc}">${vt}　重なり ${x.total >= 0 ? '+' : ''}${x.total.toFixed(1)}</span>
    <div class="moons">${x.moons.map(o => `<div class="moon tp" tabindex="0" data-tip="${tipOf(o)}">${o.full ? FULL : NEW}<div>${o.sign}${o.full ? '満月' : '新月'}<small>${x.m}/${o.d} ${String(o.hh).padStart(2, '0')}:${String(o.mm).padStart(2, '0')}　${MOONREAD[o.full ? 1 : 0]}</small></div></div>`).join('')}</div>
    <div class="cols">
-    <article class="card"><h4>西洋占星術<em>${sc(w.score)}</em></h4><p class="k">今の星と、生まれた時の星の関係</p><ul>${wl}</ul>
+    <article class="card"><h4>天体の動き<em>${sc(w.score)}</em></h4><p class="k">今の星と、生まれた時の星の関係</p><ul>${wl}</ul>
      ${st.length ? `<p class="k" style="margin-top:12px">この月の切り替わり：${st.join('、')}</p>` : ''}</article>
     <article class="card"><h4>12年周期<em>${sc(r.score)}</em></h4><p class="k">${RES.rokusei.label}の12年周期</p>
      <p class="big">年運 ${r.year}　月運 ${r.month}</p>
