@@ -465,12 +465,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let jupInSun = false;
     for (let d = 1; d <= days; d++) {
       const t = jstTime(y, m, d, 12);
-      const t2 = jstTime(y, m, d, 12 + 24);
-      for (const r of Object.keys(retro)) {
-        let dl = norm(lon(r, t2)) - norm(lon(r, t));
-        if (dl > 180) dl -= 360; if (dl < -180) dl += 360;
-        if (dl < 0) retro[r]++;
-      }
+      for (const r of Object.keys(retro)) if (speed(r, t) < 0) retro[r]++;
       for (const tp of SLOW) {
         const tl = norm(lon(tp, t));
         if (tp === 'Jupiter' && Math.floor(tl / 30) === Math.floor(nat.Sun / 30)) jupInSun = true;
@@ -515,16 +510,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
 
   // 逆行期間（その月の切り替わり日）
+  // 逆行・順行の切り替わり日（日本時間）。その日の0時と24時で速度の向きが変わった日を返す
+  function speed(k, t) {
+    let dl = norm(lon(k, t.AddDays(1 / 48))) - norm(lon(k, t.AddDays(-1 / 48)));
+    if (dl > 180) dl -= 360; if (dl < -180) dl += 360;
+    return dl;
+  }
   function retroStations(y, m) {
     const out = [];
     const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
     for (const k of ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']) {
-      let prev = null;
-      for (let d = 0; d <= days; d++) {
-        const t = jstTime(y, m, d, 0), t2 = jstTime(y, m, d, 24);
-        let dl = norm(lon(k, t2)) - norm(lon(k, t)); if (dl > 180) dl -= 360; if (dl < -180) dl += 360;
-        const r = dl < 0;
-        if (prev !== null && r !== prev && d >= 1) out.push({ d, k, n: n(k), start: r });
+      let prev = speed(k, jstTime(y, m, 1, 0)) < 0;
+      for (let d = 1; d <= days; d++) {
+        const r = speed(k, jstTime(y, m, d, 24)) < 0;
+        if (r !== prev) out.push({ d, k, n: n(k), start: r });
         prev = r;
       }
     }
