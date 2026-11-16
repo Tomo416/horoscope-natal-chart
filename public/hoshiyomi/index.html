@@ -462,10 +462,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const found = {}; // key -> {best orb, ...}
     const retro = { Mercury: 0, Venus: 0, Mars: 0 };
+    const rfirst = {}, rlast = {};
     let jupInSun = false;
     for (let d = 1; d <= days; d++) {
       const t = jstTime(y, m, d, 12);
-      for (const r of Object.keys(retro)) if (speed(r, t) < 0) retro[r]++;
+      for (const r of Object.keys(retro)) if (speed(r, t) < 0) { retro[r]++; if (rfirst[r] == null) rfirst[r] = d; rlast[r] = d; }
       for (const tp of SLOW) {
         const tl = norm(lon(tp, t));
         if (tp === 'Jupiter' && Math.floor(tl / 30) === Math.floor(nat.Sun / 30)) jupInSun = true;
@@ -500,7 +501,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (cnt > 0) {
         const w = rlab[r][2] * Math.min(1, cnt / 15 + 0.3);
         score += w;
-        items.push({ s: w, text: `${rlab[r][0]}（${cnt}日間）`, sub: rlab[r][1], retro: true });
+        const p = retroPeriod(r, y, m, rfirst[r], rlast[r]);
+        items.push({ s: w, text: `${rlab[r][0]} ${p.label}${p.note ? `（${p.note}）` : ''}`, sub: rlab[r][1], retro: true });
       }
     }
     items.sort((a, b) => Math.abs(b.s) - Math.abs(a.s));
@@ -515,6 +517,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let dl = norm(lon(k, t.AddDays(1 / 48))) - norm(lon(k, t.AddDays(-1 / 48)));
     if (dl > 180) dl -= 360; if (dl < -180) dl += 360;
     return dl;
+  }
+  // その月にかかる逆行の期間全体（日本時間の日付）
+  function ymd(y, m, d) { const t = new Date(Date.UTC(y, m - 1, d)); return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() }; }
+  function retroPeriod(k, y, m, first, last) {
+    let a = first; while (speed(k, jstTime(y, m, a, 0)) < 0) a--;
+    let b = last; while (speed(k, jstTime(y, m, b, 24)) < 0) b++;
+    const A = ymd(y, m, a), B = ymd(y, m, b);
+    const fmt = (P, show) => `${show ? P.y + '/' : ''}${P.m}/${P.d}`;
+    const cross = A.y !== B.y || A.y !== y || B.y !== y;
+    const label = `${fmt(A, cross)}〜${fmt(B, cross)}`;
+    const startsIn = A.y === y && A.m === m, endsIn = B.y === y && B.m === m;
+    const note = startsIn && endsIn ? '' : startsIn ? `この月は${A.m}/${A.d}から` : endsIn ? `この月は${B.m}/${B.d}まで` : 'この月はずっと逆行中';
+    return { label, note };
   }
   function retroStations(y, m) {
     const out = [];
