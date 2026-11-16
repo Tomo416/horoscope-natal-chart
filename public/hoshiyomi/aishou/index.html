@@ -83,6 +83,7 @@ h2.sec{font:800 clamp(24px,3vw,32px)/1.15 "Shippori Mincho B1",serif;margin:44px
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:16px;height:16px;border-radius:4px;display:inline-block}
 .mdet{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.share{grid-column:1/-1;margin:0;font-size:15px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
 .note{font-size:13px;color:var(--sub);margin-top:24px;max-width:80ch}
 .busy{opacity:.45;pointer-events:none}
 @media(max-width:860px){.res{grid-template-columns:minmax(0,1fr)}.cols{grid-template-columns:minmax(0,1fr)}.row2{grid-template-columns:repeat(2,minmax(0,1fr))}.row2 .relw{grid-column:1/-1}}
@@ -987,10 +988,12 @@ function months() {
   $('mtitle').textContent = wins.length ? `ふたりの追い風が重なる月：${wins.slice(0, 4).map(x => `${x.y}年${x.m}月`).join('、')}` : 'ふたりの追い風が重なる月';
   const x = ms[SEL];
   const one = (who, w) => `<article class="card"><h3>${esc(who)}　${x.y}年${x.m}月<em>${(w.total >= 0 ? '+' : '') + w.total.toFixed(1)}</em></h3>
-    <ul>${li(w.west.score, `天体の動き ${MARK(w.west.score)[1]}`, w.west.items[0] ? w.west.items[0].text : '大きな星の動きはありません')}
+    <ul>${(() => { const own = w.west.items.filter(i => !i.retro); return li(w.west.score, `天体の動き ${MARK(w.west.score)[1]}`, own[0] ? own[0].text : '大きな星の動きはありません'); })()}
     ${li(w.roku.score, `12年周期 ${MARK(w.roku.score)[1]}　年運 ${w.roku.year}・月運 ${w.roku.month}`, w.roku.mr)}
     ${li(w.kyu.score, `9年周期 ${MARK(w.kyu.score)[1]}　月 ${w.kyu.month.n}`, w.kyu.month.r)}</ul></article>`;
-  $('mdet').innerHTML = one(NA, x.wa) + one(NB, x.wb);
+  const retro = x.wa.west.items.filter(i => i.retro);
+  const share = `<p class="share">ふたり共通の空の動き：${retro.length ? retro.map(i => `${i.text}（${i.sub}）`).join('、') : 'この月は水星・金星・火星の逆行はありません'}</p>`;
+  $('mdet').innerHTML = share + one(NA, x.wa) + one(NB, x.wb);
 }
 
 const KEYS = ['na', 'ba', 'ta', 'nb', 'bb', 'tb', 'sm', 'len'];
