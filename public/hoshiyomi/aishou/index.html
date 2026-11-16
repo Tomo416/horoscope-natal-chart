@@ -97,12 +97,12 @@ h2.sec{font:800 clamp(24px,3vw,32px)/1.15 "Shippori Mincho B1",serif;margin:44px
    <div class="people">
     <fieldset><legend>おひとり目</legend>
      <label>お名前（任意）<input id="na" type="text" placeholder="Aさん" maxlength="12"></label>
-     <label>生年月日<input id="ba" type="date" value="1984-04-12" required></label>
+     <label>生年月日<input id="ba" type="date" value="1984-04-11" required></label>
      <label>出生時刻（わかれば）<input id="ta" type="time"></label>
     </fieldset>
     <fieldset><legend>おふたり目</legend>
      <label>お名前（任意）<input id="nb" type="text" placeholder="Bさん" maxlength="12"></label>
-     <label>生年月日<input id="bb" type="date" value="1986-10-03" required></label>
+     <label>生年月日<input id="bb" type="date" value="1986-10-05" required></label>
      <label>出生時刻（わかれば）<input id="tb" type="time"></label>
     </fieldset>
    </div>
@@ -138,7 +138,7 @@ h2.sec{font:800 clamp(24px,3vw,32px)/1.15 "Shippori Mincho B1",serif;margin:44px
    </div>
   </div>
   <div class="mdet" id="mdet"></div>
-  <p class="note">出生時刻がない人は正午で計算し、月の位置は相性に使いません。天体の動きは二人のホロスコープの重なり、12年周期は生まれた日の干支どうしの関係と運気の波、9年周期は本命星の五行の関係を見ています。</p>
+  <p class="note">出生時刻がない人は正午で計算します。月は、生まれた日のうちに星座が変わらなければ星座どうしの位置関係で相性に入れ、変わる日なら相性に入れずに二つの候補を出します。天体の動きは二人のホロスコープの重なり、12年周期は生まれた日の干支どうしの関係と運気の波、9年周期は本命星の五行の関係を見ています。</p>
  </div>
 </main>
 
@@ -458,6 +458,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     Pluto: { conj: '根本からの変容', soft: '深い力で立て直せる', hard: '力関係のぶつかり合い。所有・お金の問題' }
   };
 
+  // 出生時刻がわからない人の月：生まれた日の0時〜24時（日本時間）で星座が変わらなければ確定
+  function moonDay(birth) {
+    if (birth.h != null) {
+      const l = norm(lon('Moon', jstTime(birth.y, birth.m, birth.d, birth.h, birth.mi ?? 0)));
+      return { known: true, certain: true, sign: signOf(l), idx: Math.floor(l / 30), deg: degIn(l), lon: l };
+    }
+    const t0 = jstTime(birth.y, birth.m, birth.d, 0), t1 = jstTime(birth.y, birth.m, birth.d, 24);
+    const a = norm(lon('Moon', t0)), b = norm(lon('Moon', t1));
+    const ia = Math.floor(a / 30), ib = Math.floor(b / 30);
+    if (ia === ib) return { known: false, certain: true, sign: SIGNS[ia], idx: ia };
+    // 星座が変わる時刻を探す
+    let lo = 0, hi = 24;
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2;
+      const im = Math.floor(norm(lon('Moon', jstTime(birth.y, birth.m, birth.d, 0).AddDays(mid / 24))) / 30);
+      if (im === ia) lo = mid; else hi = mid;
+    }
+    const hh = Math.floor(lo), mm = Math.round((lo - hh) * 60);
+    return { known: false, certain: false, signs: [SIGNS[ia], SIGNS[ib]], idxs: [ia, ib], at: `${hh}:${String(mm % 60).padStart(2, '0')}` };
+  }
+  function moonText(md) {
+    if (md.known) return `${md.sign} ${md.deg}°`;
+    if (md.certain) return `${md.sign}（時刻不明でも確定）`;
+    return `${md.signs[0]}か${md.signs[1]}（${md.at}ごろに移動）`;
+  }
+
   function natal(birth) {
     const t = jstTime(birth.y, birth.m, birth.d, birth.h ?? 12, birth.mi ?? 0);
     return positions(t);
@@ -698,11 +724,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     return {
       natal: Object.fromEntries(PL.map(p => [p.k, { n: p.n, g: p.g, lon: nat[p.k], sign: signOf(nat[p.k]), deg: degIn(nat[p.k]) }])),
-      hasTime, rokusei: r, honmei: h, months: list
+      hasTime, moon: moonDay(birth), rokusei: r, honmei: h, months: list
     };
   }
 
-  root.Shoubu = { run, moonPhases, natal, rokusei, honmei, rokuYear, rokuMonth, kyuseiMonth, westernMonth, monthCenter, sekki, SIGNS, PL };
+  root.Shoubu = { run, moonPhases, natal, moonDay, moonText, rokusei, honmei, rokuYear, rokuMonth, kyuseiMonth, westernMonth, monthCenter, sekki, SIGNS, PL };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>/* 星の縁エンジン：二人の相性（天体の動き・12年周期・9年周期）と、二人の追い風が重なる月 */
@@ -743,31 +769,50 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function key(a, b) { return [a, b].sort().join('-'); }
 
-  function synastry(NA, NB, rel, useMoonA, useMoonB) {
+  const SIGN_ASP = { 0: [0, 'conj', '重なる'], 2: [60, 'soft', '支え合う'], 10: [60, 'soft', '支え合う'], 4: [120, 'soft', '後押しし合う'], 8: [120, 'soft', '後押しし合う'], 3: [90, 'hard', 'ぶつかる'], 9: [90, 'hard', 'ぶつかる'], 6: [180, 'opp', '向かい合う'] };
+  function synastry(NA, NB, rel, MA, MB) {
     const items = [];
     let score = 0;
+    const md = { A: MA, B: MB };
+    const usable = (who, p) => p !== 'Moon' || md[who].known || md[who].certain;
+    const exact = (who, p) => p !== 'Moon' || md[who].known;
+    const sidx = (who, N, p) => p === 'Moon' && !md[who].known ? md[who].idx : Math.floor(N[p] / 30);
     for (const a of KEYP) {
-      if (a === 'Moon' && !useMoonA) continue;
+      if (!usable('A', a)) continue;
       for (const b of KEYP) {
-        if (b === 'Moon' && !useMoonB) continue;
+        if (!usable('B', b)) continue;
         if (['Jupiter', 'Saturn'].includes(a) && ['Jupiter', 'Saturn'].includes(b) && a !== b) continue;
-        let diff = Math.abs(norm(NA[a] - NB[b])); if (diff > 180) diff = 360 - diff;
-        const maxOrb = Math.min(ORB[a], ORB[b]);
-        for (const [ang, kind, nm] of [[0, 'conj', '重なる'], [60, 'soft', '支え合う'], [120, 'soft', '後押しし合う'], [90, 'hard', 'ぶつかる'], [180, 'opp', '向かい合う']]) {
-          const orb = Math.abs(diff - ang);
-          if (orb > maxOrb) continue;
-          const k = key(a, b);
-          const w = (WEIGHT[rel][k] || 1) * (1 - orb / (maxOrb * 1.6));
+        const k = key(a, b);
+        let hits = [];
+        if (exact('A', a) && exact('B', b)) {
+          let diff = Math.abs(norm(NA[a] - NB[b])); if (diff > 180) diff = 360 - diff;
+          const maxOrb = Math.min(ORB[a], ORB[b]);
+          for (const [ang, kind, nm] of [[0, 'conj', '重なる'], [60, 'soft', '支え合う'], [120, 'soft', '後押しし合う'], [90, 'hard', 'ぶつかる'], [180, 'opp', '向かい合う']]) {
+            const orb = Math.abs(diff - ang);
+            if (orb <= maxOrb) hits.push({ kind, nm, f: 1 - orb / (maxOrb * 1.6), bySign: false });
+          }
+        } else {
+          // 時刻不明の月は、星座どうしの位置関係で見る
+          const d = (sidx('B', NB, b) - sidx('A', NA, a) + 12) % 12;
+          const sa = SIGN_ASP[d];
+          if (sa) hits.push({ kind: sa[1], nm: sa[2], f: 0.7, bySign: true });
+        }
+        for (const h of hits) {
+          const w = (WEIGHT[rel][k] || 1) * h.f;
           const heavy = [a, b].some(x => x === 'Mars' || x === 'Saturn');
-          let v = kind === 'soft' ? 1 : kind === 'conj' ? (heavy ? 0.3 : 1) : kind === 'opp' ? -0.4 : -0.8;
-          if (kind === 'opp' && k === 'Moon-Sun') v = 0.3; // 太陽と月の向かい合いは引き合い
+          let v = h.kind === 'soft' ? 1 : h.kind === 'conj' ? (heavy ? 0.3 : 1) : h.kind === 'opp' ? -0.4 : -0.8;
+          if (h.kind === 'opp' && k === 'Moon-Sun') v = 0.3; // 太陽と月の向かい合いは引き合い
           v *= w;
           score += v;
           const theme = THEME[k] || `${WORD[a]}と${WORD[b]}`;
-          const sub = kind === 'soft' ? SOFT_T[rel](theme) : kind === 'conj' ? CONJ_T(theme) : HARD_T[rel](theme);
-          items.push({ s: v, a, b, text: `Aの${PN[a]}とBの${PN[b]}が${nm}`, sub, theme });
+          const sub = h.kind === 'soft' ? SOFT_T[rel](theme) : h.kind === 'conj' ? CONJ_T(theme) : HARD_T[rel](theme);
+          items.push({ s: v, a, b, text: `Aの${PN[a]}とBの${PN[b]}が${h.nm}${h.bySign ? '（星座で判定）' : ''}`, sub, theme });
         }
       }
+    }
+    for (const who of ['A', 'B']) {
+      const m = md[who];
+      if (!m.known && !m.certain) items.push({ s: 0, text: `${who}の月は${m.signs[0]}か${m.signs[1]}`, sub: `生まれた日の${m.at}ごろに星座が変わるため、月は相性に入れていません。出生時刻がわかれば確定します`, info: true });
     }
     // 太陽星座のエレメント
     const ea = Math.floor(NA.Sun / 30) % 4, eb = Math.floor(NB.Sun / 30) % 4;
@@ -839,7 +884,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const NA = S.natal(A), NB = S.natal(B);
     const RA = S.rokusei(A), RB = S.rokusei(B);
     const HA = S.honmei(A), HB = S.honmei(B);
-    const west = synastry(NA, NB, rel, A.h != null, B.h != null);
+    const MA = S.moonDay(A), MB = S.moonDay(B);
+    const west = synastry(NA, NB, rel, MA, MB);
     const c12 = cycle12(RA, RB, rel, sy);
     const c9 = cycle9(HA, HB, rel);
     const total = west.score + c12.score + c9.score;
@@ -849,8 +895,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return { y: x.y, m: x.m, a: x.total, b: y.total, both: (x.total + y.total) / 2, win: x.total >= 1.5 && y.total >= 1.5, moons: x.moons, wa: x, wb: y };
     });
     return {
-      A: { natal: NA, r: RA, h: HA, sign: S.SIGNS[Math.floor(NA.Sun / 30)] },
-      B: { natal: NB, r: RB, h: HB, sign: S.SIGNS[Math.floor(NB.Sun / 30)] },
+      A: { natal: NA, r: RA, h: HA, moon: MA, sign: S.SIGNS[Math.floor(NA.Sun / 30)] },
+      B: { natal: NB, r: RB, h: HB, moon: MB, sign: S.SIGNS[Math.floor(NB.Sun / 30)] },
       west, c12, c9, total, level: level(total), months: mons
     };
   }
@@ -916,7 +962,7 @@ function goodBad() {
 function cards() {
   const w = R.west, a = R.c12, k = R.c9;
   $('cols').innerHTML = `
-   <article class="card"><h3>天体の動き<em>${sc(w.score)}</em></h3><p class="k">ふたりのホロスコープの重なり</p><ul>${w.items.slice(0, 6).map(i => li(i.s, i.text, i.sub)).join('')}</ul></article>
+   <article class="card"><h3>天体の動き<em>${sc(w.score)}</em></h3><p class="k">ふたりのホロスコープの重なり<br>月：${esc(NA)} ${Shoubu.moonText(R.A.moon)}／${esc(NB)} ${Shoubu.moonText(R.B.moon)}</p><ul>${[...w.items.filter(i => !i.info).slice(0, 6), ...w.items.filter(i => i.info)].map(i => li(i.s, i.text, i.sub)).join('')}</ul></article>
    <article class="card"><h3>12年周期<em>${sc(a.score)}</em></h3><p class="k">${R.A.r.label}（${R.A.r.gz}） と ${R.B.r.label}（${R.B.r.gz}）</p><ul>${a.items.map(i => li(i.s, i.text, i.sub)).join('')}</ul></article>
    <article class="card"><h3>9年周期<em>${sc(k.score)}</em></h3><p class="k">本命星の五行</p><ul>${k.items.map(i => li(i.s, i.text, i.sub)).join('')}</ul></article>`;
 }

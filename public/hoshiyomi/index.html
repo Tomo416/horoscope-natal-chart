@@ -132,7 +132,7 @@ details summary{cursor:pointer;font-weight:700;margin-top:18px}
   <section class="detail" id="detail" style="margin-top:30px"></section>
 
   <details><summary>生まれた時の星（ネイタル）</summary><div class="natal" id="natal"></div></details>
-  <p class="note">出生時刻がない場合は正午で計算し、月の位置は使いません。12年周期は生まれた日の干支から星人を出し、年運・月運の12周期を当てています。9年周期は立春と節入りで年・月を区切り、本命星の入る宮と暗剣殺を見ています。占術ごとの点数は−2〜＋2で、重なりはその合計です。</p>
+  <p class="note">出生時刻がない場合は正午で計算します。月は、生まれた日のうちに星座が変わらなければ時刻がなくても星座を出し、変わる日なら二つの候補を出します（月の細かい度数は、時刻がないと使いません）。12年周期は生まれた日の干支から星人を出し、年運・月運の12周期を当てています。9年周期は立春と節入りで年・月を区切り、本命星の入る宮と暗剣殺を見ています。占術ごとの点数は−2〜＋2で、重なりはその合計です。</p>
  </div>
 </main>
 
@@ -453,6 +453,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     Pluto: { conj: '根本からの変容', soft: '深い力で立て直せる', hard: '力関係のぶつかり合い。所有・お金の問題' }
   };
 
+  // 出生時刻がわからない人の月：生まれた日の0時〜24時（日本時間）で星座が変わらなければ確定
+  function moonDay(birth) {
+    if (birth.h != null) {
+      const l = norm(lon('Moon', jstTime(birth.y, birth.m, birth.d, birth.h, birth.mi ?? 0)));
+      return { known: true, certain: true, sign: signOf(l), idx: Math.floor(l / 30), deg: degIn(l), lon: l };
+    }
+    const t0 = jstTime(birth.y, birth.m, birth.d, 0), t1 = jstTime(birth.y, birth.m, birth.d, 24);
+    const a = norm(lon('Moon', t0)), b = norm(lon('Moon', t1));
+    const ia = Math.floor(a / 30), ib = Math.floor(b / 30);
+    if (ia === ib) return { known: false, certain: true, sign: SIGNS[ia], idx: ia };
+    // 星座が変わる時刻を探す
+    let lo = 0, hi = 24;
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2;
+      const im = Math.floor(norm(lon('Moon', jstTime(birth.y, birth.m, birth.d, 0).AddDays(mid / 24))) / 30);
+      if (im === ia) lo = mid; else hi = mid;
+    }
+    const hh = Math.floor(lo), mm = Math.round((lo - hh) * 60);
+    return { known: false, certain: false, signs: [SIGNS[ia], SIGNS[ib]], idxs: [ia, ib], at: `${hh}:${String(mm % 60).padStart(2, '0')}` };
+  }
+  function moonText(md) {
+    if (md.known) return `${md.sign} ${md.deg}°`;
+    if (md.certain) return `${md.sign}（時刻不明でも確定）`;
+    return `${md.signs[0]}か${md.signs[1]}（${md.at}ごろに移動）`;
+  }
+
   function natal(birth) {
     const t = jstTime(birth.y, birth.m, birth.d, birth.h ?? 12, birth.mi ?? 0);
     return positions(t);
@@ -693,11 +719,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     return {
       natal: Object.fromEntries(PL.map(p => [p.k, { n: p.n, g: p.g, lon: nat[p.k], sign: signOf(nat[p.k]), deg: degIn(nat[p.k]) }])),
-      hasTime, rokusei: r, honmei: h, months: list
+      hasTime, moon: moonDay(birth), rokusei: r, honmei: h, months: list
     };
   }
 
-  root.Shoubu = { run, moonPhases, natal, rokusei, honmei, rokuYear, rokuMonth, kyuseiMonth, westernMonth, monthCenter, sekki, SIGNS, PL };
+  root.Shoubu = { run, moonPhases, natal, moonDay, moonText, rokusei, honmei, rokuYear, rokuMonth, kyuseiMonth, westernMonth, monthCenter, sekki, SIGNS, PL };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>
@@ -793,8 +819,8 @@ function detail(x) {
 
 function profile() {
   const N = RES.natal, r = RES.rokusei;
-  $('prof').innerHTML = `<span class="chip">太陽<b>${N.Sun.sign}</b></span>${RES.hasTime ? `<span class="chip">月<b>${N.Moon.sign}</b></span>` : ''}<span class="chip">12年周期<b>${r.label}${r.reigou ? '・霊合星人' : ''}</b></span><span class="chip">本命星<b>${RES.honmei.name}</b></span><span class="chip">日干支<b>${r.gz}</b></span>`;
-  $('natal').innerHTML = Object.values(N).filter(p => RES.hasTime || p.n !== '月').map(p => `<div><span>${p.g} ${p.n}</span><b>${p.sign} ${p.deg}°</b></div>`).join('');
+  $('prof').innerHTML = `<span class="chip">太陽<b>${N.Sun.sign}</b></span><span class="chip">月<b>${RES.moon.known || RES.moon.certain ? RES.moon.sign : RES.moon.signs.join('か')}</b></span><span class="chip">12年周期<b>${r.label}${r.reigou ? '・霊合星人' : ''}</b></span><span class="chip">本命星<b>${RES.honmei.name}</b></span><span class="chip">日干支<b>${r.gz}</b></span>`;
+  $('natal').innerHTML = Object.values(N).map(p => `<div><span>${p.g} ${p.n}</span><b>${p.n === '月' && !RES.hasTime ? Shoubu.moonText(RES.moon) : `${p.sign} ${p.deg}°`}</b></div>`).join('');
 }
 
 function compute() {
