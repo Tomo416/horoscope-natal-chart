@@ -61,8 +61,8 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
     const t = toHalf(time).replace(/[^0-9:]/g, "");
     const hm = /^\d{1,2}:\d{2}$/.test(t) ? t : /^\d{3,4}$/.test(t) ? `${t.slice(0, -2)}:${t.slice(-2)}` : "";
     const unknown = timeUnknown || !hm;
-    const pref = unknown ? TOKYO : PREFECTURES.find((p) => p.code === prefCode) ?? TOKYO;
-    const muni = unknown ? undefined : (MUNICIPALITIES[pref.code] ?? []).find((m) => m.code === muniCode);
+    const pref = PREFECTURES.find((p) => p.code === prefCode) ?? TOKYO;
+    const muni = (MUNICIPALITIES[pref.code] ?? []).find((m) => m.code === muniCode);
     onSubmit({
       name: name.trim() || undefined,
       date: iso,
@@ -117,14 +117,14 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
         </label>
         {(timeUnknown || !time) && (
           <p className="mt-1 text-xs text-slate-500">
-            正午（12:00）・東京で計算します。時間で変わる「アセンダント」と「ハウス」は表示しません。
+            正午（12:00）で計算します。時間で変わる「アセンダント」と「ハウス」は表示しません（出生地は選んでも結果は変わりません）。
           </p>
         )}
       </div>
 
       <label className="block">
         <span className="font-semibold">出生地</span>
-        <select value={timeUnknown || !time ? TOKYO.code : prefCode} disabled={timeUnknown || !time}
+        <select value={prefCode}
           onChange={(e) => { setPrefCode(Number(e.target.value)); setMuniCode(""); }}
           className={`mt-1 w-full ${field} disabled:bg-slate-100`}>
           {PREFECTURES.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
@@ -133,11 +133,11 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
 
       <label className="block">
         <span className="font-semibold">市区町村（任意）</span>
-        <select value={timeUnknown || !time ? "" : muniCode} disabled={timeUnknown || !time}
+        <select value={muniCode}
           onChange={(e) => setMuniCode(e.target.value)}
           className={`mt-1 w-full ${field} disabled:bg-slate-100`}>
-          <option value="">選ばない（{(PREFECTURES.find((p) => p.code === (timeUnknown || !time ? TOKYO.code : prefCode)) ?? TOKYO).city}で計算）</option>
-          {(MUNICIPALITIES[timeUnknown || !time ? TOKYO.code : prefCode] ?? []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
+          <option value="">選ばない（{(PREFECTURES.find((p) => p.code === prefCode) ?? TOKYO).city}で計算）</option>
+          {(MUNICIPALITIES[prefCode] ?? []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
         </select>
         <span className="mt-1 block text-xs text-slate-500">出生時間がわかる場合、生まれた市区町村を選ぶとアセンダントとハウスがより正確になります。</span>
       </label>
