@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "はじめてのホロスコープ診断",
+  title: "西洋占星術",
   description: "解説付きインタラクティブ・ホロスコープ診断",
 };
 

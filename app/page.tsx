@@ -33,7 +33,7 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 py-10">
       <header className="no-print text-center">
-        <h1 className="text-3xl font-bold">はじめてのホロスコープ</h1>
+        <h1 className="text-3xl font-bold">西洋占星術</h1>
         <p className="mt-2 text-slate-600">生まれた日の星空から、あなたの個性をやさしく読み解きます。</p>
       </header>
 
