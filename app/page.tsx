@@ -77,6 +77,10 @@ export default function Home() {
           <Report sections={buildReport(chart)} />
         </section>
       )}
+
+      <footer className="no-print text-center text-xs text-slate-400">
+        市区町村の位置：国土数値情報（行政区域データ）（国土交通省）をもとに作成
+      </footer>
     </main>
   );
 }
