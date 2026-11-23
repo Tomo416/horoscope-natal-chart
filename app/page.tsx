@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import BirthForm from "@/components/BirthForm";
 import HoroscopeChart from "@/components/HoroscopeChart";
 import ChartSummary from "@/components/ChartSummary";
@@ -35,6 +36,7 @@ export default function Home() {
       <header className="no-print text-center">
         <h1 className="text-3xl font-bold">西洋占星術</h1>
         <p className="mt-2 text-slate-600">生まれた日の星空から、あなたの個性をやさしく読み解きます。</p>
+        <p className="mt-2 text-sm"><Link href="/kantei/" className="text-indigo-700 underline">仕事・お金・人間関係・恋愛・人生のテーマ別鑑定はこちら</Link></p>
       </header>
 
       <BirthForm onSubmit={handleSubmit} loading={loading} />
