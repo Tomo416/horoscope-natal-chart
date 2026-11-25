@@ -28,7 +28,7 @@ function warekiLabel(iso: string) {
 }
 
 export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthInput) => void; loading: boolean }) {
-  const [era, setEra] = useState<EraKey>("昭和");
+  const [era, setEra] = useState<EraKey>("西暦");
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
