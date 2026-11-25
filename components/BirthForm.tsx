@@ -28,7 +28,6 @@ function warekiLabel(iso: string) {
 }
 
 export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthInput) => void; loading: boolean }) {
-  const [name, setName] = useState("");
   const [era, setEra] = useState<EraKey>("昭和");
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
@@ -64,7 +63,6 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
     const pref = PREFECTURES.find((p) => p.code === prefCode) ?? TOKYO;
     const muni = (MUNICIPALITIES[pref.code] ?? []).find((m) => m.code === muniCode);
     onSubmit({
-      name: name.trim() || undefined,
       date: iso,
       time: unknown ? null : hm.padStart(5, "0"),
       timeUnknown: unknown,
@@ -79,12 +77,6 @@ export default function BirthForm({ onSubmit, loading }: { onSubmit: (v: BirthIn
 
   return (
     <form onSubmit={submit} className="no-print space-y-4 rounded-2xl bg-white p-6 shadow">
-      <label className="block">
-        <span className="font-semibold">お名前（任意・印刷時に表示）</span>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="例：山田 花子"
-          className={`mt-1 w-full ${field}`} />
-      </label>
-
       <div>
         <span className="font-semibold">生年月日 <span className="text-red-500">*</span></span>
         <div className="mt-1 flex flex-wrap items-center gap-2">
